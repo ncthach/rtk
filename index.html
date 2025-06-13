@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Kingdoms Strategy Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="mapContainer">
+            <canvas id="gameCanvas"></canvas>
+        </div>
+        <div id="infoPanel">
+            <div class="turn-display">
+                <h3 id="turnDisplay">Year 189 - Spring</h3>
+            </div>
+            
+            <div class="court-info">
+                <h4>Court</h4>
+                <div class="court-position">
+                    <span class="info-label">Advisor:</span>
+                    <span class="info-value" id="advisorName">None</span>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('overview')">Overview</div>
+                <div class="tab" onclick="switchTab('characters')">Characters</div>
+            </div>
+            
+            <div id="overviewTab" class="tab-content active">
+                <div id="provinceInfo" class="province-info" style="display: none;">
+                    <h2 id="provinceName">-</h2>
+                    <div class="info-row">
+                        <span class="info-label">Ruler:</span>
+                        <span class="info-value" id="provinceRuler">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Population:</span>
+                        <span class="info-value" id="provincePopulation">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Gold:</span>
+                        <span class="info-value" id="provinceGold">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Food:</span>
+                        <span class="info-value" id="provinceFood">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Soldiers:</span>
+                        <span class="info-value" id="provinceSoldiers">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Defense:</span>
+                        <span class="info-value" id="provinceDefense">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Development:</span>
+                        <span class="info-value" id="provinceDevelopment">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Commerce:</span>
+                        <span class="info-value" id="provinceCommerce">-</span>
+                    </div>
+                    
+                    <div class="tasks-section">
+                        <h3>Current Tasks</h3>
+                        <div id="tasksList"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="charactersTab" class="tab-content">
+                <div class="character-sort">
+                    <div class="sort-label">Sort by:</div>
+                    <select class="sort-select" id="characterSort" onchange="sortCharacters()">
+                        <option value="name">Name</option>
+                        <option value="power">Power</option>
+                        <option value="leadership">Leadership</option>
+                        <option value="politics">Politics</option>
+                        <option value="charm">Charm</option>
+                        <option value="intelligence">Intelligence</option>
+                        <option value="loyalty">Loyalty</option>
+                    </select>
+                </div>
+                <div id="characterList" class="character-list"></div>
+            </div>
+            
+            <button class="end-turn" onclick="endTurn()">End Turn</button>
+        </div>
+    </div>
+
+    <!-- Load scripts in order -->
+    <script src="js/classes.js"></script>
+    <script src="js/game-state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/dialogs.js"></script>
+    <script src="js/actions.js"></script>
+    <script src="js/game-loop.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
