@@ -1,7 +1,18 @@
 // UI update functions
 function updateAdvisorDisplay() {
     const advisorName = advisor ? advisor.name : "None";
-    document.getElementById('advisorName').textContent = advisorName;
+    const advisorLabel = document.getElementById('advisorName');
+    advisorLabel.textContent = advisorName;
+    
+    // Make the advisor label clickable
+    advisorLabel.style.cursor = 'pointer';
+    advisorLabel.onclick = () => openAdvisorDialog();
+    
+    // Remove any existing change advisor button
+    const existingBtn = document.querySelector('.change-advisor-btn');
+    if (existingBtn) {
+        existingBtn.remove();
+    }
 }
 
 function updateTurnDisplay() {
@@ -151,7 +162,9 @@ function updateCharactersList(province) {
     });
     
     const allDiscoveredChars = characters.filter(c => 
-        (c.force === null || c.force === currentPlayer) && discoveredCharacters.has(c.name) && c.currentProvince !== province
+        c.force === null &&  // Only show free characters
+        discoveredCharacters.has(c.name) && 
+        c.currentProvince !== province
     );
     
     if (allDiscoveredChars.length > 0) {

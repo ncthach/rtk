@@ -59,6 +59,9 @@ function openTaskDialog(province, taskType) {
     };
 }
 
+// Add a variable to store the previous dialog state
+let previousDialogState = null;
+
 function openHireDialog(province, targetChar, availableChars) {
     const overlay = document.createElement('div');
     overlay.className = 'dialog-overlay';
@@ -93,53 +96,42 @@ function openHireDialog(province, targetChar, availableChars) {
     document.body.appendChild(overlay);
     
     currentDialog = { overlay };
-    
-    overlay.onclick = (e) => {
-        if (e.target === overlay) closeDialog();
-    };
 }
 
-function openMoveDialog(character, destinations) {
-    const overlay = document.createElement('div');
-    overlay.className = 'dialog-overlay';
+function selectCharacterForHire(hirerName, provinceId, targetName) {
+    const province = provinces.find(p => p.id === provinceId);
+    const hirer = province.characters.find(c => c.name === hirerName);
+    const target = province.characters.find(c => c.name === targetName);
     
-    const dialog = document.createElement('div');
-    dialog.className = 'dialog';
+    if (!hirer || !target) return;
     
-    let dialogHTML = `<h3>Move ${character.name}</h3>`;
-    dialogHTML += '<p>Select destination:</p>';
-    dialogHTML += '<div class="province-options">';
+    let successChance;
+    if (target.force === null) {
+        const baseChance = 0.3;
+        const charmBonus = hirer.charm / 100 * 0.7;
+        successChance = baseChance + charmBonus;
+    } else {
+        const loyaltyFactor = (100 - target.loyalty) / 100;
+        const charmFactor = hirer.charm / 100;
+        successChance = loyaltyFactor * charmFactor * 0.8;
+    }
     
-    destinations.forEach(dest => {
-        const fromIndex = provinces.findIndex(p => p === character.currentProvince);
-        const toIndex = provinces.findIndex(p => p === dest);
-        const distance = provinceDistances[fromIndex][toIndex];
-        
-        dialogHTML += `
-            <div class="province-option" 
-                 onclick="selectDestination('${character.name}', ${dest.id})">
-                <div class="province-option-name">${dest.name}</div>
-                <div class="province-option-info">Distance: ${distance} turn${distance > 1 ? 's' : ''}</div>
-            </div>
-        `;
-    });
+    const willSucceed = Math.random() < successChance;
     
-    dialogHTML += '</div>';
-    dialogHTML += `
-        <div class="dialog-buttons">
-            <button class="dialog-button" onclick="closeDialog()">Cancel</button>
-        </div>
-    `;
-    
-    dialog.innerHTML = dialogHTML;
-    overlay.appendChild(dialog);
-    document.body.appendChild(overlay);
-    
-    currentDialog = { overlay };
-    
-    overlay.onclick = (e) => {
-        if (e.target === overlay) closeDialog();
+    // Store current dialog state before closing
+    previousDialogState = {
+        province,
+        targetChar: target,
+        availableChars: province.characters.filter(c => 
+            c.force === currentPlayer && 
+            !c.traveling && 
+            !c.actionTaken
+        )
     };
+    
+    // Close current dialog and show advisor prediction
+    closeDialog();
+    showAdvisorPrediction(hirer, target, successChance, willSucceed, province);
 }
 
 function showAdvisorPrediction(hirer, target, successChance, actualResult, province) {
@@ -187,6 +179,58 @@ function showAdvisorPrediction(hirer, target, successChance, actualResult, provi
             <button class="dialog-button primary" onclick="executeHire('${hirer.name}', ${province.id}, '${target.name}', ${actualResult})">
                 Proceed
             </button>
+            <button class="dialog-button" onclick="cancelHireAttempt()">Cancel</button>
+        </div>
+    `;
+    
+    dialog.innerHTML = dialogHTML;
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    currentDialog = { overlay };
+}
+
+function cancelHireAttempt() {
+    closeDialog();
+    // Reopen the character selection dialog
+    if (previousDialogState) {
+        openHireDialog(
+            previousDialogState.province,
+            previousDialogState.targetChar,
+            previousDialogState.availableChars
+        );
+        previousDialogState = null;
+    }
+}
+
+function openMoveDialog(character, destinations) {
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    
+    const dialog = document.createElement('div');
+    dialog.className = 'dialog';
+    
+    let dialogHTML = `<h3>Move ${character.name}</h3>`;
+    dialogHTML += '<p>Select destination:</p>';
+    dialogHTML += '<div class="province-options">';
+    
+    destinations.forEach(dest => {
+        const fromIndex = provinces.findIndex(p => p === character.currentProvince);
+        const toIndex = provinces.findIndex(p => p === dest);
+        const distance = provinceDistances[fromIndex][toIndex];
+        
+        dialogHTML += `
+            <div class="province-option" 
+                 onclick="selectDestination('${character.name}', ${dest.id})">
+                <div class="province-option-name">${dest.name}</div>
+                <div class="province-option-info">Distance: ${distance} turn${distance > 1 ? 's' : ''}</div>
+            </div>
+        `;
+    });
+    
+    dialogHTML += '</div>';
+    dialogHTML += `
+        <div class="dialog-buttons">
             <button class="dialog-button" onclick="closeDialog()">Cancel</button>
         </div>
     `;
@@ -196,6 +240,10 @@ function showAdvisorPrediction(hirer, target, successChance, actualResult, provi
     document.body.appendChild(overlay);
     
     currentDialog = { overlay };
+    
+    overlay.onclick = (e) => {
+        if (e.target === overlay) closeDialog();
+    };
 }
 
 function showTurnSummary() {
@@ -261,28 +309,6 @@ window.selectCharacterForTask = function(charName, provinceId, taskId) {
     }
 }
 
-window.selectCharacterForHire = function(hirerName, provinceId, targetName) {
-    const province = provinces.find(p => p.id === provinceId);
-    const hirer = province.characters.find(c => c.name === hirerName);
-    const target = province.characters.find(c => c.name === targetName);
-    
-    if (!hirer || !target) return;
-    
-    let successChance;
-    if (target.force === null) {
-        const baseChance = 0.3;
-        const charmBonus = hirer.charm / 100 * 0.7;
-        successChance = baseChance + charmBonus;
-    } else {
-        const loyaltyFactor = (100 - target.loyalty) / 100;
-        const charmFactor = hirer.charm / 100;
-        successChance = loyaltyFactor * charmFactor * 0.8;
-    }
-    
-    const willSucceed = Math.random() < successChance;
-    showAdvisorPrediction(hirer, target, successChance, willSucceed, province);
-}
-
 window.selectDestination = function(charName, destId) {
     const character = characters.find(c => c.name === charName);
     const destination = provinces.find(p => p.id === destId);
@@ -298,3 +324,86 @@ window.selectDestination = function(charName, destId) {
         updateProvinceInfo(selectedProvince);
     }
 }
+
+// Make functions global
+window.cancelHireAttempt = cancelHireAttempt;
+
+function openAdvisorDialog() {
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    
+    const dialog = document.createElement('div');
+    dialog.className = 'dialog';
+    
+    let dialogHTML = `<h3>Select New Advisor</h3>`;
+    dialogHTML += '<p>Choose a character to serve as your advisor:</p>';
+    dialogHTML += '<div class="character-options">';
+    
+    // Get all characters in player's provinces
+    const availableAdvisors = characters.filter(c => 
+        c.force === currentPlayer && 
+        !c.traveling
+    );
+    
+    availableAdvisors.forEach(char => {
+        const isCurrentAdvisor = char === advisor;
+        dialogHTML += `
+            <div class="character-option ${isCurrentAdvisor ? 'selected' : ''}" 
+                 onclick="selectAdvisor('${char.name}')">
+                <div class="character-option-name">${char.name}</div>
+                <div class="character-option-stat">Intelligence: ${char.intelligence}</div>
+                ${isCurrentAdvisor ? '<div class="character-option-stat">Current Advisor</div>' : ''}
+            </div>
+        `;
+    });
+    
+    dialogHTML += '</div>';
+    dialogHTML += `
+        <div class="dialog-buttons">
+            <button class="dialog-button primary" onclick="confirmAdvisorChange()">Confirm</button>
+            <button class="dialog-button" onclick="closeDialog()">Cancel</button>
+        </div>
+    `;
+    
+    dialog.innerHTML = dialogHTML;
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    currentDialog = { 
+        overlay,
+        selectedAdvisor: advisor ? advisor.name : null
+    };
+}
+
+function selectAdvisor(charName) {
+    if (currentDialog) {
+        currentDialog.selectedAdvisor = charName;
+        
+        const options = document.querySelectorAll('.character-option');
+        options.forEach(opt => {
+            if (opt.querySelector('.character-option-name').textContent === charName) {
+                opt.classList.add('selected');
+            } else {
+                opt.classList.remove('selected');
+            }
+        });
+    }
+}
+
+function confirmAdvisorChange() {
+    if (!currentDialog || !currentDialog.selectedAdvisor) return;
+    
+    const newAdvisor = characters.find(c => c.name === currentDialog.selectedAdvisor);
+    if (newAdvisor) {
+        advisor = newAdvisor;
+        updateAdvisorDisplay();
+        showMessage(`${newAdvisor.name} is now your advisor`);
+    }
+    
+    closeDialog();
+}
+
+// Make functions global
+window.openAdvisorDialog = openAdvisorDialog;
+window.selectAdvisor = selectAdvisor;
+window.confirmAdvisorChange = confirmAdvisorChange;

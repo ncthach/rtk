@@ -553,3 +553,13 @@ body {
 .arrival-message {
     color: #cc88ff;
 }
+
+.clickable-label {
+    color: #d4af37;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.clickable-label:hover {
+    color: #ffd700;
+}

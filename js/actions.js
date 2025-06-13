@@ -111,7 +111,12 @@ function executeHire(hirerName, provinceId, targetName, willSucceed) {
     }
     
     hirer.actionTaken = true;
-    closeDialog();
+    
+    // Close all dialogs
+    while (currentDialog) {
+        closeDialog();
+    }
+    
     updateProvinceInfo(province);
 }
 
@@ -132,6 +137,9 @@ function rewardCharacter(charName, provinceId) {
 
 // Turn management
 function endTurn() {
+    // Clear previous turn summary
+    turnSummary = [];
+    
     // Process character movements
     characters.forEach(char => {
         if (char.traveling) {
@@ -160,41 +168,56 @@ function endTurn() {
             province.characters.forEach(char => {
                 if (char.task && !char.actionTaken && !char.traveling) {
                     const effectiveness = char.getTaskEffectiveness();
+                    let oldValue, newValue;
                     
                     switch(char.task) {
                         case 'develop':
+                            oldValue = province.development;
                             province.development = Math.min(100, province.development + effectiveness / 10);
-                            summary.changes.push({
-                                positive: true,
-                                text: `Development increased to ${province.development}%`
-                            });
+                            newValue = province.development;
+                            if (newValue > oldValue) {
+                                summary.changes.push({
+                                    positive: true,
+                                    text: `Development increased from ${oldValue}% to ${newValue}%`
+                                });
+                            }
                             break;
                         case 'commerce':
+                            oldValue = province.commerce;
                             province.commerce = Math.min(100, province.commerce + effectiveness / 10);
-                            province.gold += Math.floor(effectiveness * 10);
-                            summary.changes.push({
-                                positive: true,
-                                text: `Commerce increased to ${province.commerce}% and earned ${Math.floor(effectiveness * 10)} gold`
-                            });
+                            newValue = province.commerce;
+                            const goldEarned = Math.floor(effectiveness * 10);
+                            province.gold += goldEarned;
+                            if (newValue > oldValue) {
+                                summary.changes.push({
+                                    positive: true,
+                                    text: `Commerce increased from ${oldValue}% to ${newValue}% and earned ${goldEarned} gold`
+                                });
+                            }
                             break;
                         case 'fortify':
+                            oldValue = province.defense;
                             province.defense = Math.min(100, province.defense + effectiveness / 10);
-                            summary.changes.push({
-                                positive: true,
-                                text: `Defense increased to ${province.defense}%`
-                            });
+                            newValue = province.defense;
+                            if (newValue > oldValue) {
+                                summary.changes.push({
+                                    positive: true,
+                                    text: `Defense increased from ${oldValue}% to ${newValue}%`
+                                });
+                            }
                             break;
                         case 'recruit':
                             const newSoldiers = Math.floor(effectiveness * 50);
-                            province.soldiers += newSoldiers;
-                            summary.changes.push({
-                                positive: true,
-                                text: `Recruited ${newSoldiers} soldiers`
-                            });
+                            if (newSoldiers > 0) {
+                                province.soldiers += newSoldiers;
+                                summary.changes.push({
+                                    positive: true,
+                                    text: `Recruited ${newSoldiers} soldiers (Total: ${province.soldiers})`
+                                });
+                            }
                             break;
                         case 'search':
                             if (Math.random() < effectiveness / 100) {
-                                // Only look for free characters in the current province
                                 const freeChars = province.characters.filter(c => 
                                     c.force === null && 
                                     !discoveredCharacters.has(c.name)
