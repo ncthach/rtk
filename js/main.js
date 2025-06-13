@@ -6,6 +6,62 @@ function initializeGame() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     
+    // Add canvas event listeners here, after canvas is initialized
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        let clickedProvince = null;
+        for (const province of provinces) {
+            if (province.isClicked(mouseX, mouseY, camera.x, camera.y, camera.scale, canvas)) {
+                clickedProvince = province;
+                break;
+            }
+        }
+        
+        if (clickedProvince) {
+            if (selectedProvince) {
+                selectedProvince.selected = false;
+            }
+            selectedProvince = clickedProvince;
+            selectedProvince.selected = true;
+            updateProvinceInfo(selectedProvince);
+        } else {
+            isDragging = true;
+            dragStartX = mouseX;
+            dragStartY = mouseY;
+            cameraStartX = camera.x;
+            cameraStartY = camera.y;
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            camera.x = cameraStartX - (mouseX - dragStartX) / camera.scale;
+            camera.y = cameraStartY - (mouseY - dragStartY) / camera.scale;
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const zoomSpeed = 0.1;
+        
+        if (e.deltaY < 0) {
+            camera.targetScale = Math.min(camera.targetScale + zoomSpeed, 2);
+        } else {
+            camera.targetScale = Math.max(camera.targetScale - zoomSpeed, 0.5);
+        }
+    });
+    
     computeProvinceDistances();
     assignStartingCharacters();
     updateAdvisorDisplay();
@@ -120,61 +176,6 @@ let dragStartX = 0;
 let dragStartY = 0;
 let cameraStartX = 0;
 let cameraStartY = 0;
-
-canvas.addEventListener('mousedown', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    let clickedProvince = null;
-    for (const province of provinces) {
-        if (province.isClicked(mouseX, mouseY, camera.x, camera.y, camera.scale, canvas)) {
-            clickedProvince = province;
-            break;
-        }
-    }
-    
-    if (clickedProvince) {
-        if (selectedProvince) {
-            selectedProvince.selected = false;
-        }
-        selectedProvince = clickedProvince;
-        selectedProvince.selected = true;
-        updateProvinceInfo(selectedProvince);
-    } else {
-        isDragging = true;
-        dragStartX = mouseX;
-        dragStartY = mouseY;
-        cameraStartX = camera.x;
-        cameraStartY = camera.y;
-    }
-});
-
-canvas.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-        const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        
-        camera.x = cameraStartX - (mouseX - dragStartX) / camera.scale;
-        camera.y = cameraStartY - (mouseY - dragStartY) / camera.scale;
-    }
-});
-
-canvas.addEventListener('mouseup', () => {
-    isDragging = false;
-});
-
-canvas.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    const zoomSpeed = 0.1;
-    
-    if (e.deltaY < 0) {
-        camera.targetScale = Math.min(camera.targetScale + zoomSpeed, 2);
-    } else {
-        camera.targetScale = Math.max(camera.targetScale - zoomSpeed, 0.5);
-    }
-});
 
 // Make functions global
 window.switchTab = switchTab;
