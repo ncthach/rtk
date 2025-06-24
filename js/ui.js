@@ -38,7 +38,6 @@ function switchTab(tabName) {
 }
 
 function updateProvinceInfo(province) {
-    document.getElementById('provinceInfo').style.display = 'block';
     document.getElementById('provinceQuickInfo').style.display = 'block';
     
     // Update province name
@@ -53,22 +52,6 @@ function updateProvinceInfo(province) {
     document.getElementById('quickProvinceDefense').textContent = province.defense + '%';
     document.getElementById('quickProvinceAgriculture').textContent = province.agriculture + '%';
     document.getElementById('quickProvinceCommerce').textContent = province.commerce + '%';
-    
-    // Update detailed info tab
-    document.getElementById('provinceRuler').textContent = province.ruler;
-    document.getElementById('provincePopulation').textContent = province.population.toLocaleString();
-    document.getElementById('provinceGold').textContent = province.gold.toLocaleString();
-    document.getElementById('provinceFood').textContent = province.food.toLocaleString();
-    document.getElementById('provinceSoldiers').textContent = province.soldiers.toLocaleString();
-    document.getElementById('provinceDefense').textContent = province.defense + '%';
-    document.getElementById('provinceAgriculture').textContent = province.agriculture + '%';
-    document.getElementById('provinceCommerce').textContent = province.commerce + '%';
-    
-    // Update the appropriate tab content based on which tab is active
-    const activeTab = document.querySelector('.tab.active');
-    if (activeTab) {
-        switchTab(activeTab.textContent.toLowerCase());
-    }
     
     updateTasksList(province);
     updateCharactersList(province);

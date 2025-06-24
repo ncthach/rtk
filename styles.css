@@ -33,11 +33,12 @@ body {
 
 #infoPanel {
     width: 350px;
-    background: #2a2a1a;
-    border-left: 3px solid #8b6914;
+    background: #1a1611;
+    color: #ffffff;
     padding: 10px;
     overflow-y: auto;
-    color: #ffffff;
+    border-left: 2px solid #6b5a48;
+    cursor: default;
 }
 
 .turn-display {
@@ -646,12 +647,15 @@ body {
     flex-wrap: nowrap;
     gap: 12px;
     padding: 4px 6px;
-    background-color: rgba(139, 105, 20, 0.1);
+    background-color: transparent;
     border-radius: 4px;
-    border: 1px solid #8b6914;
-    font-size: 11px;
+    border: none;
+    font-size: 14px;
     overflow-x: auto;
     align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
+    width: fit-content;
 }
 
 .quick-info-item {
@@ -661,31 +665,17 @@ body {
     color: #d4af37;
     white-space: nowrap;
     flex-shrink: 0;
+    cursor: default;
 }
 
 .quick-info-item .emoji {
-    font-size: 12px;
-    cursor: help;
+    font-size: 14px;
     display: inline-block;
-}
-
-.quick-info-item .emoji:hover::after {
-    content: attr(title);
-    position: absolute;
-    background: #2a2a1a;
-    color: #d4af37;
-    padding: 4px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    border: 1px solid #8b6914;
-    z-index: 1000;
-    margin-left: 8px;
-    margin-top: -20px;
-    white-space: nowrap;
+    cursor: default;
 }
 
 .quick-info-item span:last-child {
     font-weight: bold;
     color: #ffffff;
-    font-size: 10px;
+    font-size: 11px;
 }
