@@ -12,26 +12,69 @@
             <canvas id="gameCanvas"></canvas>
         </div>
         <div id="infoPanel">
-            <div class="turn-display">
-                <h3 id="turnDisplay">Year 189 - Spring</h3>
+            <div class="game-header">
+                <div class="turn-info">
+                    <span id="turnDisplay">Year 189 - Spring</span>
+                </div>
+                <div class="force-info">
+                    <span id="forceName">Cao Cao</span>
+                </div>
+                <div class="advisor-info">
+                    Advisor: <span id="advisorName" class="clickable-label">None</span>
+                </div>
             </div>
             
-            <div class="court-info">
-                <h4>Court</h4>
-                <div class="court-position">
-                    <span class="info-label">Advisor:</span>
-                    <span class="info-value" id="advisorName">None</span>
+            <div class="province-header">
+                <div class="province-title-row">
+                    <h2 id="provinceName">-</h2>
+                    <span class="title-info">
+                        <span class="quick-info-item">
+                            <span class="emoji" title="Ruler">👑</span>
+                            <span id="quickProvinceRuler">-</span>
+                        </span>
+                        <span class="quick-info-item">
+                            <span class="emoji" title="Population">👥</span>
+                            <span id="quickProvincePopulation">-</span>
+                        </span>
+                    </span>
+                </div>
+                <div id="provinceQuickInfo" class="province-quick-info" style="display: none;">
+                    <span class="quick-info-item">
+                        <span class="emoji" title="Gold">💰</span>
+                        <span id="quickProvinceGold">-</span>
+                    </span>
+                    <span class="quick-info-item">
+                        <span class="emoji" title="Food">🌾</span>
+                        <span id="quickProvinceFood">-</span>
+                    </span>
+                    <span class="quick-info-item">
+                        <span class="emoji" title="Soldiers">⚔️</span>
+                        <span id="quickProvinceSoldiers">-</span>
+                    </span>
+                    <span class="quick-info-item">
+                        <span class="emoji" title="Defense">🛡️</span>
+                        <span id="quickProvinceDefense">-</span>
+                    </span>
+                    <span class="quick-info-item">
+                        <span class="emoji" title="Agriculture">🌱</span>
+                        <span id="quickProvinceAgriculture">-</span>
+                    </span>
+                    <span class="quick-info-item">
+                        <span class="emoji" title="Commerce">🏺</span>
+                        <span id="quickProvinceCommerce">-</span>
+                    </span>
                 </div>
             </div>
             
             <div class="tabs">
-                <div class="tab active" onclick="switchTab('overview')">Overview</div>
+                <div class="tab active" onclick="switchTab('info')">Info</div>
+                <div class="tab" onclick="switchTab('tasks')">Tasks</div>
                 <div class="tab" onclick="switchTab('characters')">Characters</div>
+                <div class="tab" onclick="switchTab('actions')">Actions</div>
             </div>
             
-            <div id="overviewTab" class="tab-content active">
+            <div id="infoTab" class="tab-content active">
                 <div id="provinceInfo" class="province-info" style="display: none;">
-                    <h2 id="provinceName">-</h2>
                     <div class="info-row">
                         <span class="info-label">Ruler:</span>
                         <span class="info-value" id="provinceRuler">-</span>
@@ -57,19 +100,18 @@
                         <span class="info-value" id="provinceDefense">-</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Development:</span>
-                        <span class="info-value" id="provinceDevelopment">-</span>
+                        <span class="info-label">Agriculture:</span>
+                        <span class="info-value" id="provinceAgriculture">-</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label">Commerce:</span>
                         <span class="info-value" id="provinceCommerce">-</span>
                     </div>
-                    
-                    <div class="tasks-section">
-                        <h3>Current Tasks</h3>
-                        <div id="tasksList"></div>
-                    </div>
                 </div>
+            </div>
+            
+            <div id="tasksTab" class="tab-content">
+                <div id="tasksList"></div>
             </div>
             
             <div id="charactersTab" class="tab-content">
@@ -88,6 +130,16 @@
                 <div id="characterList" class="character-list"></div>
             </div>
             
+            <div id="actionsTab" class="tab-content">
+                <div class="action-list">
+                    <div class="action-item">
+                        <h3>Hire Character</h3>
+                        <p>Send a character to hire another character from any province.</p>
+                        <button class="action-button" onclick="openHireAction()">Hire</button>
+                    </div>
+                </div>
+            </div>
+            
             <button class="end-turn" onclick="endTurn()">End Turn</button>
         </div>
     </div>
@@ -95,9 +147,10 @@
     <!-- Load scripts in order -->
     <script src="js/classes.js"></script>
     <script src="js/game-state.js"></script>
-    <script src="js/ui.js"></script>
+    <script src="js/character-list.js"></script>
     <script src="js/dialogs.js"></script>
     <script src="js/actions.js"></script>
+    <script src="js/ui.js"></script>
     <script src="js/game-loop.js"></script>
     <script src="js/main.js"></script>
 </body>

@@ -3,7 +3,7 @@ function confirmTaskAssignment(provinceId, taskId) {
     const province = provinces.find(p => p.id === provinceId);
     if (!province || !currentDialog) return;
     
-    const selectedChar = province.characters.find(c => c.name === currentDialog.selectedCharacter);
+    const selectedChar = province.characters.find(c => c.id === currentDialog.selectedCharacter);
     if (!selectedChar) return;
     
     // Remove task from previous character if any
@@ -37,9 +37,9 @@ function removeTaskAssignment(provinceId, taskId) {
 }
 
 // Character movement functions
-function moveCharacterAction(charName, provinceId) {
+function moveCharacterAction(charId, provinceId) {
     const province = provinces.find(p => p.id === provinceId);
-    const character = province.characters.find(c => c.name === charName);
+    const character = province.characters.find(c => c.id === charId);
     
     if (!province || !character || character.traveling) return;
     
@@ -73,13 +73,14 @@ function startCharacterMovement(character, destination) {
 }
 
 // Character hiring functions
-function hireCharacter(charName, provinceId) {
-    const province = provinces.find(p => p.id === provinceId);
-    const targetChar = province.characters.find(c => c.name === charName);
+function hireCharacter(charId, provinceId) {
+    const targetProvince = provinces.find(p => p.id === provinceId);
+    const targetChar = targetProvince.characters.find(c => c.id === charId);
     
-    if (!province || !targetChar || targetChar.force === currentPlayer) return;
+    if (!targetProvince || !targetChar || targetChar.force === currentPlayer) return;
     
-    const availableChars = province.characters.filter(c => 
+    // Get available characters from all player's provinces
+    const availableChars = characters.filter(c => 
         c.force === currentPlayer && 
         !c.traveling && 
         !c.actionTaken
@@ -90,40 +91,76 @@ function hireCharacter(charName, provinceId) {
         return;
     }
     
-    openHireDialog(province, targetChar, availableChars);
+    openHireDialog(targetProvince, targetChar, availableChars);
 }
 
-function executeHire(hirerName, provinceId, targetName, willSucceed) {
-    const province = provinces.find(p => p.id === provinceId);
-    const hirer = province.characters.find(c => c.name === hirerName);
-    const target = province.characters.find(c => c.name === targetName);
+function executeHire(hirerId, provinceId, targetId, willSucceed) {
+    const targetProvince = provinces.find(p => p.id === provinceId);
+    const hirer = characters.find(c => c.id === hirerId);
+    const target = targetProvince.characters.find(c => c.id === targetId);
     
-    if (!province || !hirer || !target) return;
+    if (!targetProvince || !hirer || !target) return;
     
-    if (willSucceed) {
-        target.force = currentPlayer;
-        target.loyalty = 50;
-        target.hidden = false;
-        discoveredCharacters.add(target.name);
-        showMessage(`${target.name} has joined your forces!`);
-    } else {
-        showMessage(`Failed to hire ${target.name}`);
+    // Check if target is still available for hiring
+    if (target.force !== null) {
+        showMessage(`${target.name} is no longer available for hiring`);
+        closeDialog();
+        return;
     }
     
-    hirer.actionTaken = true;
+    // If characters are in the same province, hire immediately
+    if (hirer.currentProvince === targetProvince) {
+        if (willSucceed) {
+            target.force = currentPlayer;
+            target.loyalty = 50;
+            target.hidden = false;
+            discoveredCharacters.add(target.id);
+            showMessage(`${target.name} has joined your forces!`);
+        } else {
+            showMessage(`Failed to hire ${target.name}`);
+        }
+        hirer.actionTaken = true;
+        closeDialog();
+        updateProvinceInfo(targetProvince);
+        return;
+    }
+    
+    // Calculate travel time for hiring mission
+    const fromIndex = provinces.findIndex(p => p === hirer.currentProvince);
+    const toIndex = provinces.findIndex(p => p === targetProvince);
+    const travelTime = provinceDistances[fromIndex][toIndex];
+    
+    // Start the hiring mission
+    hirer.traveling = true;
+    hirer.destination = targetProvince;
+    hirer.turnsRemaining = travelTime;
+    hirer.hiringMission = {
+        target: target,
+        willSucceed: willSucceed,
+        returnProvince: hirer.currentProvince
+    };
+    
+    // Remove from current province
+    const currentProvince = hirer.currentProvince;
+    const charIndex = currentProvince.characters.indexOf(hirer);
+    if (charIndex !== -1) {
+        currentProvince.characters.splice(charIndex, 1);
+    }
+    
+    showMessage(`${hirer.name} begins journey to ${targetProvince.name} to hire ${target.name}`);
     
     // Close all dialogs
     while (currentDialog) {
         closeDialog();
     }
     
-    updateProvinceInfo(province);
+    updateProvinceInfo(targetProvince);
 }
 
 // Character reward function
-function rewardCharacter(charName, provinceId) {
+function rewardCharacter(charId, provinceId) {
     const province = provinces.find(p => p.id === provinceId);
-    const character = province.characters.find(c => c.name === charName);
+    const character = province.characters.find(c => c.id === charId);
     
     if (!province || !character || character.rewardedThisTurn || province.gold < 100) return;
     
@@ -140,7 +177,7 @@ function endTurn() {
     // Clear previous turn summary
     turnSummary = [];
     
-    // Process character movements
+    // Process character movements and hiring missions
     characters.forEach(char => {
         if (char.traveling) {
             char.turnsRemaining--;
@@ -148,10 +185,66 @@ function endTurn() {
                 char.traveling = false;
                 char.currentProvince = char.destination;
                 char.destination.characters.push(char);
+                
+                // Handle hiring mission completion
+                if (char.hiringMission) {
+                    const target = char.hiringMission.target;
+                    // Check if target is still available for hiring
+                    if (target.force === null) {
+                        if (char.hiringMission.willSucceed) {
+                            // Successfully hired the character
+                            target.force = currentPlayer;
+                            target.loyalty = 50;
+                            target.hidden = false;
+                            discoveredCharacters.add(target.id);
+                            
+                            // Start target character's journey to return province
+                            target.traveling = true;
+                            target.destination = char.hiringMission.returnProvince;
+                            target.turnsRemaining = provinceDistances[
+                                provinces.findIndex(p => p === target.currentProvince)
+                            ][
+                                provinces.findIndex(p => p === char.hiringMission.returnProvince)
+                            ];
+                            
+                            // Remove target from current province
+                            const targetProvince = target.currentProvince;
+                            const targetIndex = targetProvince.characters.indexOf(target);
+                            if (targetIndex !== -1) {
+                                targetProvince.characters.splice(targetIndex, 1);
+                            }
+                            
+                            showMessage(`${target.name} has joined your forces and is traveling to ${char.hiringMission.returnProvince.name}!`);
+                        } else {
+                            showMessage(`Failed to hire ${target.name}`);
+                        }
+                    } else {
+                        showMessage(`Cannot hire ${target.name} - they are no longer available`);
+                    }
+                    
+                    // Start return journey for hiring character
+                    char.traveling = true;
+                    char.destination = char.hiringMission.returnProvince;
+                    char.turnsRemaining = provinceDistances[
+                        provinces.findIndex(p => p === char.currentProvince)
+                    ][
+                        provinces.findIndex(p => p === char.hiringMission.returnProvince)
+                    ];
+                    
+                    // Remove from current province
+                    const currentProvince = char.currentProvince;
+                    const charIndex = currentProvince.characters.indexOf(char);
+                    if (charIndex !== -1) {
+                        currentProvince.characters.splice(charIndex, 1);
+                    }
+                    
+                    char.hiringMission = null;
+                }
+                
                 char.destination = null;
                 
-                const summary = turnSummary.find(s => s.name === char.destination.name) || 
-                              { name: char.destination.name, changes: [] };
+                const summary = turnSummary.find(s => s.name === char.currentProvince.name) || 
+                              { name: char.currentProvince.name, changes: [] };
                 summary.changes.push({
                     arrival: true,
                     text: `${char.name} has arrived`
@@ -172,13 +265,13 @@ function endTurn() {
                     
                     switch(char.task) {
                         case 'develop':
-                            oldValue = province.development;
-                            province.development = Math.min(100, province.development + effectiveness / 10);
-                            newValue = province.development;
+                            oldValue = province.agriculture;
+                            province.agriculture = Math.min(100, province.agriculture + effectiveness / 10);
+                            newValue = province.agriculture;
                             if (newValue > oldValue) {
                                 summary.changes.push({
                                     positive: true,
-                                    text: `Development increased from ${oldValue}% to ${newValue}%`
+                                    text: `Agriculture increased from ${oldValue}% to ${newValue}%`
                                 });
                             }
                             break;
@@ -217,19 +310,25 @@ function endTurn() {
                             }
                             break;
                         case 'search':
+                            console.log("Searching for free characters with effectiveness: " + effectiveness);
                             if (Math.random() < effectiveness / 100) {
                                 const freeChars = province.characters.filter(c => 
                                     c.force === null && 
-                                    !discoveredCharacters.has(c.name)
+                                    !discoveredCharacters.has(c.id)
                                 );
+                                console.log("Found " + freeChars.length + " free characters");
                                 if (freeChars.length > 0) {
                                     const foundChar = freeChars[Math.floor(Math.random() * freeChars.length)];
                                     foundChar.hidden = false;
-                                    discoveredCharacters.add(foundChar.name);
+                                    discoveredCharacters.add(foundChar.id);
                                     summary.changes.push({
                                         discovery: true,
                                         text: `Discovered ${foundChar.name}!`
                                     });
+                                    // Only update UI if this is the currently selected province
+                                    if (selectedProvince === province) {
+                                        updateProvinceInfo(province);
+                                    }
                                 }
                             }
                             break;

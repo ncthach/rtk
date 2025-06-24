@@ -168,6 +168,11 @@ function assignStartingCharacters() {
         char.currentProvince = randomProvince;
         char.movementCooldown = Math.floor(Math.random() * 3) + 1;
     });
+
+    console.log("Free Characters at Start:");
+    characters.filter(c => c.force === null).forEach(char => {
+        console.log(`${char.name} in ${char.currentProvince.name}`);
+    });
 }
 
 // Mouse controls

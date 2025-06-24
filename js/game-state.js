@@ -21,61 +21,61 @@ let camera = {
 
 // Task types
 const taskTypes = [
-    { id: 'develop', name: 'Develop Land', stat: 'Politics' },
-    { id: 'commerce', name: 'Develop Commerce', stat: 'Politics' },
+    { id: 'develop', name: 'Agriculture', stat: 'Politics' },
+    { id: 'commerce', name: 'Commerce', stat: 'Politics' },
     { id: 'fortify', name: 'Fortify', stat: 'Leadership' },
     { id: 'recruit', name: 'Recruit Soldiers', stat: 'Leadership' },
     { id: 'search', name: 'Talent Search', stat: 'Charm' }
 ];
 
-// Initialize characters
+// Initialize characters with IDs
 const characters = [
     // Cao Cao's forces
-    new Character("Cao Cao", 72, 91, 94, 96, 91, 100, "Cao Cao"),
-    new Character("Xiahou Dun", 90, 82, 58, 72, 63, 95, "Cao Cao"),
-    new Character("Xiahou Yuan", 88, 85, 52, 65, 58, 93, "Cao Cao"),
-    new Character("Cao Ren", 82, 88, 61, 68, 69, 92, "Cao Cao"),
-    new Character("Xun Yu", 25, 78, 95, 82, 96, 88, "Cao Cao"),
-    new Character("Guo Jia", 19, 72, 98, 85, 97, 82, "Cao Cao"),
+    new Character("cao_cao", "Cao Cao", 72, 91, 94, 96, 91, 100, "Cao Cao"),
+    new Character("xiahou_dun", "Xiahou Dun", 90, 82, 58, 72, 63, 95, "Cao Cao"),
+    new Character("xiahou_yuan", "Xiahou Yuan", 88, 85, 52, 65, 58, 93, "Cao Cao"),
+    new Character("cao_ren", "Cao Ren", 82, 88, 61, 68, 69, 92, "Cao Cao"),
+    new Character("xun_yu", "Xun Yu", 25, 78, 95, 82, 96, 88, "Cao Cao"),
+    new Character("guo_jia", "Guo Jia", 19, 72, 98, 85, 97, 82, "Cao Cao"),
     
     // Liu Bei's forces
-    new Character("Liu Bei", 68, 77, 75, 99, 75, 100, "Liu Bei"),
-    new Character("Guan Yu", 97, 95, 75, 92, 76, 98, "Liu Bei"),
-    new Character("Zhang Fei", 99, 78, 30, 42, 22, 97, "Liu Bei"),
-    new Character("Jian Yong", 35, 65, 82, 78, 80, 85, "Liu Bei"),
+    new Character("liu_bei", "Liu Bei", 68, 77, 75, 99, 75, 100, "Liu Bei"),
+    new Character("guan_yu", "Guan Yu", 97, 95, 75, 92, 76, 98, "Liu Bei"),
+    new Character("zhang_fei", "Zhang Fei", 99, 78, 30, 42, 22, 97, "Liu Bei"),
+    new Character("jian_yong", "Jian Yong", 35, 65, 82, 78, 80, 85, "Liu Bei"),
     
     // Sun Jian's forces
-    new Character("Sun Jian", 92, 87, 68, 82, 70, 100, "Sun Jian"),
-    new Character("Huang Gai", 86, 82, 58, 65, 66, 93, "Sun Jian"),
-    new Character("Cheng Pu", 84, 85, 72, 70, 73, 91, "Sun Jian"),
-    new Character("Han Dang", 85, 81, 62, 68, 65, 89, "Sun Jian"),
+    new Character("sun_jian", "Sun Jian", 92, 87, 68, 82, 70, 100, "Sun Jian"),
+    new Character("huang_gai", "Huang Gai", 86, 82, 58, 65, 66, 93, "Sun Jian"),
+    new Character("cheng_pu", "Cheng Pu", 84, 85, 72, 70, 73, 91, "Sun Jian"),
+    new Character("han_dang", "Han Dang", 85, 81, 62, 68, 65, 89, "Sun Jian"),
     
     // Dong Zhuo's forces
-    new Character("Dong Zhuo", 88, 75, 42, 32, 45, 100, "Dong Zhuo"),
-    new Character("Lu Bu", 100, 70, 26, 48, 26, 62, "Dong Zhuo"),
-    new Character("Li Ru", 42, 82, 88, 75, 93, 75, "Dong Zhuo"),
+    new Character("dong_zhuo", "Dong Zhuo", 88, 75, 42, 32, 45, 100, "Dong Zhuo"),
+    new Character("lu_bu", "Lu Bu", 100, 70, 26, 48, 26, 62, "Dong Zhuo"),
+    new Character("li_ru", "Li Ru", 42, 82, 88, 75, 93, 75, "Dong Zhuo"),
     
     // Yuan Shao's forces
-    new Character("Yuan Shao", 65, 78, 75, 85, 70, 100, "Yuan Shao"),
-    new Character("Yan Liang", 93, 74, 38, 52, 35, 88, "Yuan Shao"),
-    new Character("Wen Chou", 92, 72, 35, 48, 32, 86, "Yuan Shao"),
+    new Character("yuan_shao", "Yuan Shao", 65, 78, 75, 85, 70, 100, "Yuan Shao"),
+    new Character("yan_liang", "Yan Liang", 93, 74, 38, 52, 35, 88, "Yuan Shao"),
+    new Character("wen_chou", "Wen Chou", 92, 72, 35, 48, 32, 86, "Yuan Shao"),
     
     // Free characters
-    new Character("Zhao Yun", 96, 91, 76, 81, 80, 50),
-    new Character("Zhuge Liang", 38, 92, 100, 93, 100, 50),
-    new Character("Sima Yi", 63, 87, 98, 87, 96, 50),
-    new Character("Zhou Yu", 71, 86, 97, 96, 96, 50),
-    new Character("Xu Shu", 57, 84, 95, 88, 89, 50),
-    new Character("Pang Tong", 45, 82, 98, 89, 92, 50),
-    new Character("Jiang Wei", 89, 89, 87, 82, 85, 50),
-    new Character("Ma Chao", 95, 86, 44, 85, 62, 50),
-    new Character("Huang Zhong", 94, 87, 62, 68, 70, 50),
-    new Character("Wei Yan", 92, 82, 45, 62, 58, 50),
-    new Character("Deng Ai", 87, 89, 94, 72, 88, 50),
-    new Character("Zhang Liao", 92, 90, 72, 78, 82, 50),
-    new Character("Gan Ning", 94, 83, 45, 76, 68, 50),
-    new Character("Taishi Ci", 95, 81, 66, 73, 75, 50),
-    new Character("Yu Jin", 78, 88, 69, 62, 74, 50)
+    new Character("zhao_yun", "Zhao Yun", 96, 91, 76, 81, 80, 50),
+    new Character("zhuge_liang", "Zhuge Liang", 38, 92, 100, 93, 100, 50),
+    new Character("sima_yi", "Sima Yi", 63, 87, 98, 87, 96, 50),
+    new Character("zhou_yu", "Zhou Yu", 71, 86, 97, 96, 96, 50),
+    new Character("xu_shu", "Xu Shu", 57, 84, 95, 88, 89, 50),
+    new Character("pang_tong", "Pang Tong", 45, 82, 98, 89, 92, 50),
+    new Character("jiang_wei", "Jiang Wei", 89, 89, 87, 82, 85, 50),
+    new Character("ma_chao", "Ma Chao", 95, 86, 44, 85, 62, 50),
+    new Character("huang_zhong", "Huang Zhong", 94, 87, 62, 68, 70, 50),
+    new Character("wei_yan", "Wei Yan", 92, 82, 45, 62, 58, 50),
+    new Character("deng_ai", "Deng Ai", 87, 89, 94, 72, 88, 50),
+    new Character("zhang_liao", "Zhang Liao", 92, 90, 72, 78, 82, 50),
+    new Character("gan_ning", "Gan Ning", 94, 83, 45, 76, 68, 50),
+    new Character("taishi_ci", "Taishi Ci", 95, 81, 66, 73, 75, 50),
+    new Character("yu_jin", "Yu Jin", 78, 88, 69, 62, 74, 50)
 ];
 
 // Initialize provinces

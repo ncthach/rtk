@@ -3,16 +3,8 @@ function updateAdvisorDisplay() {
     const advisorName = advisor ? advisor.name : "None";
     const advisorLabel = document.getElementById('advisorName');
     advisorLabel.textContent = advisorName;
-    
-    // Make the advisor label clickable
     advisorLabel.style.cursor = 'pointer';
     advisorLabel.onclick = () => openAdvisorDialog();
-    
-    // Remove any existing change advisor button
-    const existingBtn = document.querySelector('.change-advisor-btn');
-    if (existingBtn) {
-        existingBtn.remove();
-    }
 }
 
 function updateTurnDisplay() {
@@ -20,38 +12,63 @@ function updateTurnDisplay() {
         `Year ${currentTurn.year} - ${currentTurn.season}`;
 }
 
+function updateForceDisplay() {
+    document.getElementById('forceName').textContent = currentPlayer;
+}
+
 function switchTab(tabName) {
     const tabs = document.querySelectorAll('.tab');
     const tabContents = document.querySelectorAll('.tab-content');
     
     tabs.forEach(tab => {
-        if (tab.textContent.toLowerCase().includes(tabName)) {
+        if (tab.textContent.toLowerCase() === tabName.toLowerCase()) {
             tab.classList.add('active');
         } else {
             tab.classList.remove('active');
         }
     });
     
-    if (tabName === 'overview') {
-        document.getElementById('overviewTab').classList.add('active');
-        document.getElementById('charactersTab').classList.remove('active');
-    } else {
-        document.getElementById('overviewTab').classList.remove('active');
-        document.getElementById('charactersTab').classList.add('active');
-    }
+    tabContents.forEach(content => {
+        if (content.id === `${tabName}Tab`) {
+            content.classList.add('active');
+        } else {
+            content.classList.remove('active');
+        }
+    });
 }
 
 function updateProvinceInfo(province) {
     document.getElementById('provinceInfo').style.display = 'block';
+    document.getElementById('provinceQuickInfo').style.display = 'block';
+    
+    // Update province name
     document.getElementById('provinceName').textContent = province.name;
+    
+    // Update quick info section with emojis
+    document.getElementById('quickProvinceRuler').textContent = province.ruler;
+    document.getElementById('quickProvincePopulation').textContent = province.population.toLocaleString();
+    document.getElementById('quickProvinceGold').textContent = province.gold.toLocaleString();
+    document.getElementById('quickProvinceFood').textContent = province.food.toLocaleString();
+    document.getElementById('quickProvinceSoldiers').textContent = province.soldiers.toLocaleString();
+    document.getElementById('quickProvinceDefense').textContent = province.defense + '%';
+    document.getElementById('quickProvinceAgriculture').textContent = province.agriculture + '%';
+    document.getElementById('quickProvinceCommerce').textContent = province.commerce + '%';
+    
+    // Update detailed info tab
     document.getElementById('provinceRuler').textContent = province.ruler;
     document.getElementById('provincePopulation').textContent = province.population.toLocaleString();
     document.getElementById('provinceGold').textContent = province.gold.toLocaleString();
     document.getElementById('provinceFood').textContent = province.food.toLocaleString();
     document.getElementById('provinceSoldiers').textContent = province.soldiers.toLocaleString();
     document.getElementById('provinceDefense').textContent = province.defense + '%';
-    document.getElementById('provinceDevelopment').textContent = province.development + '%';
+    document.getElementById('provinceAgriculture').textContent = province.agriculture + '%';
     document.getElementById('provinceCommerce').textContent = province.commerce + '%';
+    
+    // Update the appropriate tab content based on which tab is active
+    const activeTab = document.querySelector('.tab.active');
+    if (activeTab) {
+        switchTab(activeTab.textContent.toLowerCase());
+    }
     
     updateTasksList(province);
     updateCharactersList(province);
@@ -74,7 +91,7 @@ function updateTasksList(province) {
             taskDiv.innerHTML = `
                 <div class="task-name">${taskType.name}</div>
                 <div class="task-assigned">
-                    ${assignedChar.name} (${taskType.stat}: ${assignedChar.getTaskEffectiveness()})
+                    ${assignedChar.name} (${Character.getAttributeAbbreviation(taskType.stat.toLowerCase())}: ${assignedChar.getTaskEffectiveness()})
                 </div>
                 <div class="task-assigned">
                     Effectiveness: ${effectiveness}%
@@ -105,7 +122,7 @@ function updateCharactersList(province) {
     };
     
     const visibleChars = province.characters.filter(char => 
-        (char.force !== null || discoveredCharacters.has(char.name)) && !char.hidden
+        (char.force !== null || discoveredCharacters.has(char.id)) && !char.hidden
     );
     
     const sortedChars = getSortedCharacters(visibleChars);
@@ -123,12 +140,12 @@ function updateCharactersList(province) {
         let charHTML = `
             <div class="character-name">${char.name}</div>
             <div class="character-stats">
-                <div>POW: ${char.power} ${statBar(char.power)}</div>
-                <div>LDR: ${char.leadership} ${statBar(char.leadership)}</div>
-                <div>POL: ${char.politics} ${statBar(char.politics)}</div>
-                <div>CHM: ${char.charm} ${statBar(char.charm)}</div>
-                <div>INT: ${char.intelligence} ${statBar(char.intelligence)}</div>
-                <div>LOY: ${char.loyalty} ${statBar(char.loyalty)}</div>
+                <div>${Character.getAttributeAbbreviation('power')}: ${char.power} ${statBar(char.power)}</div>
+                <div>${Character.getAttributeAbbreviation('leadership')}: ${char.leadership} ${statBar(char.leadership)}</div>
+                <div>${Character.getAttributeAbbreviation('politics')}: ${char.politics} ${statBar(char.politics)}</div>
+                <div>${Character.getAttributeAbbreviation('charm')}: ${char.charm} ${statBar(char.charm)}</div>
+                <div>${Character.getAttributeAbbreviation('intelligence')}: ${char.intelligence} ${statBar(char.intelligence)}</div>
+                <div>${Character.getAttributeAbbreviation('loyalty')}: ${char.loyalty} ${statBar(char.loyalty)}</div>
             </div>
         `;
         
@@ -137,7 +154,11 @@ function updateCharactersList(province) {
         }
         
         if (char.traveling) {
-            charHTML += `<div class="character-traveling">Traveling to ${char.destination.name} (${char.turnsRemaining} turns)</div>`;
+            if (char.hiringMission) {
+                charHTML += `<div class="character-traveling">On hiring mission to ${char.destination.name} (${char.turnsRemaining} turns)</div>`;
+            } else {
+                charHTML += `<div class="character-traveling">Traveling to ${char.destination.name} (${char.turnsRemaining} turns)</div>`;
+            }
         } else if (char.task && char.force !== null) {
             charHTML += `<div class="character-task">Task: ${taskTypes.find(t => t.id === char.task).name}</div>`;
         }
@@ -146,13 +167,13 @@ function updateCharactersList(province) {
             charHTML += `<div class="character-status">Free Character</div>`;
         }
         
-        if (!char.traveling && province.ruler === currentPlayer) {
-            if (char.force === null || char.force !== currentPlayer) {
-                charHTML += `<button class="action-button" onclick="hireCharacter('${char.name}', ${province.id})">Hire</button>`;
+        if (!char.traveling) {
+            if (char.force !== currentPlayer && char.name !== char.force) {  // Don't show hire button for rulers
+                charHTML += `<button class="action-button" onclick="hireCharacter('${char.id}', ${char.currentProvince.id})">Hire</button>`;
             } else if (char.force === currentPlayer) {
-                charHTML += `<button class="action-button" onclick="moveCharacterAction('${char.name}', ${province.id})">Move</button>`;
+                charHTML += `<button class="action-button" onclick="moveCharacterAction('${char.id}', ${province.id})">Move</button>`;
                 if (!char.rewardedThisTurn && province.gold >= 100) {
-                    charHTML += `<button class="action-button reward" onclick="rewardCharacter('${char.name}', ${province.id})">Reward (100g)</button>`;
+                    charHTML += `<button class="action-button reward" onclick="rewardCharacter('${char.id}', ${province.id})">Reward (100g)</button>`;
                 }
             }
         }
@@ -163,7 +184,7 @@ function updateCharactersList(province) {
     
     const allDiscoveredChars = characters.filter(c => 
         c.force === null &&  // Only show free characters
-        discoveredCharacters.has(c.name) && 
+        discoveredCharacters.has(c.id) && 
         c.currentProvince !== province
     );
     
@@ -180,10 +201,10 @@ function updateCharactersList(province) {
                 <div class="character-name">${char.name}</div>
                 <div class="character-location">Currently in: ${char.currentProvince.name}</div>
                 <div class="character-stats">
-                    <div>POW: ${char.power}</div>
-                    <div>LDR: ${char.leadership}</div>
-                    <div>POL: ${char.politics}</div>
-                    <div>CHM: ${char.charm}</div>
+                    <div>${Character.getAttributeAbbreviation('power')}: ${char.power}</div>
+                    <div>${Character.getAttributeAbbreviation('leadership')}: ${char.leadership}</div>
+                    <div>${Character.getAttributeAbbreviation('politics')}: ${char.politics}</div>
+                    <div>${Character.getAttributeAbbreviation('charm')}: ${char.charm}</div>
                 </div>
             `;
             

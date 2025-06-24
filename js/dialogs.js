@@ -18,40 +18,56 @@ function openTaskDialog(province, taskType) {
     );
     
     let dialogHTML = `<h3>Assign to ${taskType.name}</h3>`;
-    dialogHTML += '<div class="character-options">';
-    
-    province.characters.filter(c => c.force === currentPlayer && !c.traveling).forEach(char => {
-        const stat = taskType.stat === 'Politics' ? char.politics : 
-                    taskType.stat === 'Leadership' ? char.leadership : char.charm;
-        const isAssigned = char === currentAssigned;
-        const hasOtherTask = char.task && char.task !== taskType.id;
-        
-        dialogHTML += `
-            <div class="character-option ${isAssigned ? 'selected' : ''}" 
-                 onclick="selectCharacterForTask('${char.name}', ${province.id}, '${taskType.id}')">
-                <div class="character-option-name">${char.name}</div>
-                <div class="character-option-stat">${taskType.stat}: ${stat}</div>
-                ${hasOtherTask ? `<div class="character-option-stat">Currently: ${taskTypes.find(t => t.id === char.task).name}</div>` : ''}
-            </div>
-        `;
-    });
-    
-    dialogHTML += '</div>';
-    dialogHTML += `
-        <div class="dialog-buttons">
-            <button class="dialog-button primary" onclick="confirmTaskAssignment(${province.id}, '${taskType.id}')">Assign</button>
-            ${currentAssigned ? `<button class="dialog-button" onclick="removeTaskAssignment(${province.id}, '${taskType.id}')">Remove</button>` : ''}
-            <button class="dialog-button" onclick="closeDialog()">Cancel</button>
-        </div>
-    `;
+    const characterListContainer = document.createElement('div');
+    characterListContainer.className = 'character-options';
     
     dialog.innerHTML = dialogHTML;
+    dialog.appendChild(characterListContainer);
+
+    const availableChars = province.characters.filter(c => c.force === currentPlayer && !c.traveling);
+    const augmentedChars = availableChars.map(char => ({
+        ...char,
+        id: char.id,
+        name: char.name,
+        politics: char.politics,
+        leadership: char.leadership,
+        charm: char.charm,
+        intelligence: char.intelligence,
+        power: char.power,
+        loyalty: char.loyalty,
+        currentTask: char.task ? taskTypes.find(t => t.id === char.task).name : 'None'
+    }));
+    
+    const characterList = new CharacterList(characterListContainer, augmentedChars, {
+        attributes: ['name', taskType.stat.toLowerCase(), 'currentTask'],
+        selectionMode: 'single',
+        initialSelection: currentAssigned ? [currentAssigned.id] : [],
+        onSelectionChange: (selected) => {
+            if (selected) {
+                currentDialog.selectedCharacter = selected.id;
+            } else {
+                currentDialog.selectedCharacter = null;
+            }
+        }
+    });
+
+    const buttons = document.createElement('div');
+    buttons.className = 'dialog-buttons';
+    buttons.innerHTML = `
+        <button class="dialog-button primary" onclick="confirmTaskAssignment(${province.id}, '${taskType.id}')">Assign</button>
+        ${currentAssigned ? `<button class="dialog-button" onclick="removeTaskAssignment(${province.id}, '${taskType.id}')">Remove</button>` : ''}
+        <button class="dialog-button" onclick="closeDialog()">Cancel</button>
+    `;
+    dialog.appendChild(buttons);
+
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
     
     currentDialog = { 
         overlay, 
-        selectedCharacter: currentAssigned ? currentAssigned.name : null 
+        selectedCharacter: currentAssigned ? currentAssigned.id : null,
+        provinceId: province.id,
+        characterList: characterList // Store reference to the list instance
     };
     
     overlay.onclick = (e) => {
@@ -65,43 +81,61 @@ let previousDialogState = null;
 function openHireDialog(province, targetChar, availableChars) {
     const overlay = document.createElement('div');
     overlay.className = 'dialog-overlay';
-    
+
     const dialog = document.createElement('div');
     dialog.className = 'dialog';
-    
+
     let dialogHTML = `<h3>Hire ${targetChar.name}</h3>`;
     dialogHTML += '<p>Select a character to perform the hiring:</p>';
-    dialogHTML += '<div class="character-options">';
-    
-    availableChars.forEach(char => {
-        dialogHTML += `
-            <div class="character-option" 
-                 onclick="selectCharacterForHire('${char.name}', ${province.id}, '${targetChar.name}')">
-                <div class="character-option-name">${char.name}</div>
-                <div class="character-option-stat">Charm: ${char.charm}</div>
-                ${char.task ? `<div class="character-option-stat">Current task: ${taskTypes.find(t => t.id === char.task).name}</div>` : ''}
-            </div>
-        `;
-    });
-    
-    dialogHTML += '</div>';
-    dialogHTML += `
-        <div class="dialog-buttons">
-            <button class="dialog-button" onclick="closeDialog()">Cancel</button>
-        </div>
-    `;
+    const characterListContainer = document.createElement('div');
+    characterListContainer.className = 'character-options';
     
     dialog.innerHTML = dialogHTML;
+    dialog.appendChild(characterListContainer);
+
+    const augmentedChars = availableChars.map(char => {
+        const fromIndex = provinces.findIndex(p => p === char.currentProvince);
+        const toIndex = provinces.findIndex(p => p.id === province.id);
+        const distance = provinceDistances[fromIndex][toIndex];
+        return {
+            ...char,
+            id: char.id,
+            name: char.name,
+            charm: char.charm,
+            turnsToHire: distance > 0 ? distance : 'Same Province'
+        };
+    });
+
+    const characterList = new CharacterList(characterListContainer, augmentedChars, {
+        attributes: ['name', 'charm', 'turnsToHire'],
+        selectionMode: 'single',
+        onSelectionChange: (selected) => {
+            if (selected) {
+                // Since this dialog doesn't have a confirm button and acts on selection,
+                // we'll call the action function directly.
+                selectCharacterForHire(selected.name, province.id, targetChar.name);
+            }
+        }
+    });
+
+    const buttons = document.createElement('div');
+    buttons.className = 'dialog-buttons';
+    buttons.innerHTML = `<button class="dialog-button" onclick="closeDialog()">Cancel</button>`;
+    dialog.appendChild(buttons);
+
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
-    
-    currentDialog = { overlay };
+
+    currentDialog = { 
+        overlay,
+        characterList: characterList
+    };
 }
 
 function selectCharacterForHire(hirerName, provinceId, targetName) {
     const province = provinces.find(p => p.id === provinceId);
-    const hirer = province.characters.find(c => c.name === hirerName);
-    const target = province.characters.find(c => c.name === targetName);
+    const hirer = characters.find(c => c.name === hirerName);
+    const target = characters.find(c => c.name === targetName);
     
     if (!hirer || !target) return;
     
@@ -176,7 +210,7 @@ function showAdvisorPrediction(hirer, target, successChance, actualResult, provi
     
     dialogHTML += `
         <div class="dialog-buttons">
-            <button class="dialog-button primary" onclick="executeHire('${hirer.name}', ${province.id}, '${target.name}', ${actualResult})">
+            <button class="dialog-button primary" onclick="executeHire('${hirer.id}', ${province.id}, '${target.id}', ${actualResult})">
                 Proceed
             </button>
             <button class="dialog-button" onclick="cancelHireAttempt()">Cancel</button>
@@ -294,21 +328,6 @@ function closeTurnSummary() {
 }
 
 // Global dialog helper functions
-window.selectCharacterForTask = function(charName, provinceId, taskId) {
-    if (currentDialog) {
-        currentDialog.selectedCharacter = charName;
-        
-        const options = document.querySelectorAll('.character-option');
-        options.forEach(opt => {
-            if (opt.querySelector('.character-option-name').textContent === charName) {
-                opt.classList.add('selected');
-            } else {
-                opt.classList.remove('selected');
-            }
-        });
-    }
-}
-
 window.selectDestination = function(charName, destId) {
     const character = characters.find(c => c.name === charName);
     const destination = provinces.find(p => p.id === destId);
@@ -331,63 +350,52 @@ window.cancelHireAttempt = cancelHireAttempt;
 function openAdvisorDialog() {
     const overlay = document.createElement('div');
     overlay.className = 'dialog-overlay';
-    
+
     const dialog = document.createElement('div');
     dialog.className = 'dialog';
-    
+
     let dialogHTML = `<h3>Select New Advisor</h3>`;
     dialogHTML += '<p>Choose a character to serve as your advisor:</p>';
-    dialogHTML += '<div class="character-options">';
+    const characterListContainer = document.createElement('div');
+    characterListContainer.className = 'character-options';
     
-    // Get all characters in player's provinces
-    const availableAdvisors = characters.filter(c => 
-        c.force === currentPlayer && 
+    dialog.innerHTML = dialogHTML;
+    dialog.appendChild(characterListContainer);
+
+    const availableAdvisors = characters.filter(c =>
+        c.force === currentPlayer &&
         !c.traveling
     );
     
-    availableAdvisors.forEach(char => {
-        const isCurrentAdvisor = char === advisor;
-        dialogHTML += `
-            <div class="character-option ${isCurrentAdvisor ? 'selected' : ''}" 
-                 onclick="selectAdvisor('${char.name}')">
-                <div class="character-option-name">${char.name}</div>
-                <div class="character-option-stat">Intelligence: ${char.intelligence}</div>
-                ${isCurrentAdvisor ? '<div class="character-option-stat">Current Advisor</div>' : ''}
-            </div>
-        `;
+    const characterList = new CharacterList(characterListContainer, availableAdvisors, {
+        attributes: ['name', 'intelligence'],
+        selectionMode: 'single',
+        initialSelection: advisor ? [advisor.id] : [],
+        onSelectionChange: (selected) => {
+            if (selected) {
+                currentDialog.selectedAdvisor = selected.name;
+            } else {
+                currentDialog.selectedAdvisor = null;
+            }
+        }
     });
-    
-    dialogHTML += '</div>';
-    dialogHTML += `
-        <div class="dialog-buttons">
-            <button class="dialog-button primary" onclick="confirmAdvisorChange()">Confirm</button>
-            <button class="dialog-button" onclick="closeDialog()">Cancel</button>
-        </div>
+
+    const buttons = document.createElement('div');
+    buttons.className = 'dialog-buttons';
+    buttons.innerHTML = `
+        <button class="dialog-button primary" onclick="confirmAdvisorChange()">Confirm</button>
+        <button class="dialog-button" onclick="closeDialog()">Cancel</button>
     `;
-    
-    dialog.innerHTML = dialogHTML;
+    dialog.appendChild(buttons);
+
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
-    
-    currentDialog = { 
-        overlay,
-        selectedAdvisor: advisor ? advisor.name : null
-    };
-}
 
-function selectAdvisor(charName) {
-    if (currentDialog) {
-        currentDialog.selectedAdvisor = charName;
-        
-        const options = document.querySelectorAll('.character-option');
-        options.forEach(opt => {
-            if (opt.querySelector('.character-option-name').textContent === charName) {
-                opt.classList.add('selected');
-            } else {
-                opt.classList.remove('selected');
-            }
-        });
-    }
+    currentDialog = {
+        overlay,
+        selectedAdvisor: advisor ? advisor.name : null,
+        characterList: characterList
+    };
 }
 
 function confirmAdvisorChange() {
@@ -405,5 +413,4 @@ function confirmAdvisorChange() {
 
 // Make functions global
 window.openAdvisorDialog = openAdvisorDialog;
-window.selectAdvisor = selectAdvisor;
 window.confirmAdvisorChange = confirmAdvisorChange;

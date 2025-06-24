@@ -33,12 +33,11 @@ body {
 
 #infoPanel {
     width: 350px;
-    background-color: #3c3226;
-    border-left: 2px solid #8b7355;
-    padding: 20px;
+    background: #2a2a1a;
+    border-left: 3px solid #8b6914;
+    padding: 10px;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+    color: #ffffff;
 }
 
 .turn-display {
@@ -75,19 +74,18 @@ body {
 
 .tabs {
     display: flex;
-    border-bottom: 2px solid #8b7355;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
+    border-bottom: 2px solid #8b6914;
 }
 
 .tab {
-    flex: 1;
-    padding: 10px;
-    text-align: center;
-    cursor: pointer;
-    background-color: #2c2416;
-    border: 1px solid #8b7355;
+    padding: 6px 12px;
+    background: #3a3426;
+    border: 1px solid #8b6914;
     border-bottom: none;
-    margin-right: 5px;
+    cursor: pointer;
+    color: #d4af37;
+    font-size: 12px;
     transition: background-color 0.2s;
 }
 
@@ -562,4 +560,132 @@ body {
 
 .clickable-label:hover {
     color: #ffd700;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #2c2416;
+    color: #d4af37;
+    margin-bottom: 15px;
+}
+
+.province-header {
+    margin-bottom: 8px;
+}
+
+.province-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.province-header h2 {
+    margin: 0;
+    padding: 0;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.title-info {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+}
+
+.action-list {
+    display: grid;
+    gap: 20px;
+}
+
+.action-item {
+    background: #3a3426;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.action-item h3 {
+    color: #d4af37;
+    margin: 0 0 10px 0;
+}
+
+.action-item p {
+    color: #ffffff;
+    margin: 0 0 15px 0;
+}
+
+.character-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.character-list-table th,
+.character-list-table td {
+    border-left: 1px solid #555;
+    border-right: 1px solid #555;
+    padding: 8px;
+    text-align: left;
+}
+
+.character-list-table th:first-child,
+.character-list-table td:first-child {
+    border-left: none;
+}
+
+.character-list-table th:last-child,
+.character-list-table td:last-child {
+    border-right: none;
+}
+
+.province-quick-info {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 12px;
+    padding: 4px 6px;
+    background-color: rgba(139, 105, 20, 0.1);
+    border-radius: 4px;
+    border: 1px solid #8b6914;
+    font-size: 11px;
+    overflow-x: auto;
+    align-items: center;
+}
+
+.quick-info-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: #d4af37;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.quick-info-item .emoji {
+    font-size: 12px;
+    cursor: help;
+    display: inline-block;
+}
+
+.quick-info-item .emoji:hover::after {
+    content: attr(title);
+    position: absolute;
+    background: #2a2a1a;
+    color: #d4af37;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    border: 1px solid #8b6914;
+    z-index: 1000;
+    margin-left: 8px;
+    margin-top: -20px;
+    white-space: nowrap;
+}
+
+.quick-info-item span:last-child {
+    font-weight: bold;
+    color: #ffffff;
+    font-size: 10px;
 }

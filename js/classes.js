@@ -1,5 +1,7 @@
 class Character {
-    constructor(name, power, leadership, politics, charm, intelligence, loyalty, force = null) {
+    constructor(id, name, power, leadership, politics, charm, intelligence, loyalty, force = null) {
+        // Add ID as the first parameter
+        this.id = id;
         this.name = name;
         this.power = power;
         this.leadership = leadership;
@@ -20,6 +22,21 @@ class Character {
         this.traveling = false;
         this.destination = null;
         this.turnsRemaining = 0;
+    }
+    
+    static getAttributeAbbreviations() {
+        return {
+            'power': 'PWR',
+            'leadership': 'LDR', 
+            'politics': 'POL',
+            'charm': 'CHR',
+            'intelligence': 'INT',
+            'loyalty': 'LOY'
+        };
+    }
+    
+    static getAttributeAbbreviation(attributeName) {
+        return this.getAttributeAbbreviations()[attributeName] || attributeName.toUpperCase().substring(0, 3);
     }
     
     getTaskEffectiveness() {
@@ -61,7 +78,7 @@ class Province {
         this.food = Math.floor(Math.random() * 50000) + 10000;
         this.soldiers = Math.floor(Math.random() * 10000) + 1000;
         this.defense = Math.floor(Math.random() * 50) + 30;
-        this.development = Math.floor(Math.random() * 50) + 20;
+        this.agriculture = Math.floor(Math.random() * 50) + 20;
         this.commerce = Math.floor(Math.random() * 50) + 20;
         
         // Characters in this province
